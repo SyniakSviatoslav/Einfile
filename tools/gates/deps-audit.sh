@@ -36,8 +36,14 @@ python3 tools/deps/rustsec.py --self-test >/dev/null || { echo "deps-audit: REFU
 python3 tools/deps/npm_audit.py --self-test >/dev/null || { echo "deps-audit: REFUSED: npm_audit self-test failed"; exit 2; }
 python3 tools/deps/rustsec.py --max-age-days "${DEPS_DB_MAX_AGE_DAYS:-7}" --ignore tools/deps/audit-ignore.txt --fail-on high .
 r=$?; [ $r -gt $rc ] && rc=$r
-python3 tools/deps/npm_audit.py $off --fail-on high .
-r=$?; [ $r -gt $rc ] && rc=$r
+# No package.json anywhere means no npm dependency to audit, which is a measurement, not a gap.
+# A package.json without its lock still REFUSES (npm_audit.py's own rule).
+if [ -n "$(find . -name package.json -not -path '*/node_modules/*' -not -path '*/target/*' | head -n 1)" ]; then
+  python3 tools/deps/npm_audit.py $off --fail-on high .
+  r=$?; [ $r -gt $rc ] && rc=$r
+else
+  echo "npm_audit: no package.json in this tree, no npm dependency to audit"
+fi
 case $rc in
   0) echo "deps-audit: GREEN (no unignored high/critical advisory in any Cargo.lock or package-lock.json)";;
   1) echo "deps-audit: RED (high/critical advisory above; bump it or add a DATED line to tools/deps/audit-ignore.txt)";;

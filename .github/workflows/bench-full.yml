@@ -25,8 +25,10 @@ on:
       reps:
         description: repetitions, at least 5
         default: '5'
+# contents: write only so the last step can push the raw output to the branch `bench-results`:
+# artifacts and job logs need a signed-in account even on a public repo, a branch does not.
 permissions:
-  contents: read
+  contents: write
 jobs:
   full:
     runs-on: ubuntu-24.04
@@ -60,3 +62,11 @@ jobs:
           path: |
             machine.txt
             einfile-bench-full.txt
+      - name: publish the raw output to the branch bench-results
+        if: always()
+        run: |
+          d=$(mktemp -d); cp machine.txt einfile-bench-full.txt "$d"/ 2>/dev/null || true
+          cd "$d" && git init -q && git checkout -q -b bench-results
+          { echo "commit $GITHUB_SHA"; echo "run $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"; echo "N=$N VS=$VS REPS=$REPS"; } > RUN.txt
+          git add -A && git -c user.name=github-actions -c user.email=github-actions@users.noreply.github.com commit -qm "bench: $GITHUB_SHA"
+          git push -f "https://x-access-token:${{ github.token }}@github.com/$GITHUB_REPOSITORY" bench-results

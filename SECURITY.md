@@ -7,5 +7,5 @@ Report security problems privately, through GitHub private vulnerability reporti
 Do not open a public issue for a problem that can be exploited. Say which file or fixture shows it,
 its sha256, what each reader answered, and what an attacker gains.
 
-Nothing has been released, so there is no supported version yet. No external audit is on record.
+The crates are at 0.1.0 on crates.io; before 1.0 there is no supported version. No external audit is on record.
 What a good result means and what it does not: [README.md](README.md), section Limits.

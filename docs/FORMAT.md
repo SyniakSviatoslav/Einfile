@@ -1,8 +1,8 @@
 <!-- SPDX-License-Identifier: MIT OR Apache-2.0 -->
 # The einfile format, container version 2 - normative description
 
-Status: **normative for the bytes written today, and not frozen.** Nothing has been released. Before 1.0 a layout that no
-production image holds may still change without a new root-version, and DOC and SEG did in October 2026; the first release
+Status: **normative for the bytes written today, and not frozen.** The crates are at 0.1.0 on crates.io, which freezes nothing. Before 1.0 a layout that no
+production image holds may still change without a new root-version, and DOC and SEG did in October 2026; the 1.0 release
 fixes the text. Until then this text, the fixtures of §13 and the reference code of one commit go together. This is the English twin of
 `docs/FORMAT.uk.md`, section for section; the two state the same rules. It describes the
 bytes that the reference writers and readers produce and accept today.

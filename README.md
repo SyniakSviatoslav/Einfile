@@ -26,7 +26,7 @@ Designed for erasure: a record can be removed from a signed history without brea
 
 ---
 
-**Status: pre-1.0. Nothing has been released.** The format is normative for the bytes written today and is not frozen: a layout no production image holds may still change before 1.0, and the 1.0 release fixes the text. No external audit is on record. Read [When not to use it](#when-not-to-use-it) and [Limits](#limits) before you rely on any of this.
+**Status: pre-1.0; the crates are at 0.1.0 on [crates.io](https://crates.io/crates/einstore).** The format is normative for the bytes written today and is not frozen: a layout no production image holds may still change before 1.0, and the 1.0 release fixes the text. No external audit is on record. Read [When not to use it](#when-not-to-use-it) and [Limits](#limits) before you rely on any of this.
 
 ## What it is
 

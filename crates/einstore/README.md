@@ -11,7 +11,7 @@ a signature (a *seal*) that makes a later edit visible. A file can also carry ev
 itself of when a record existed, and an archive file can carry its own reader.
 
 **This is pre-1.0 (0.1.0 on crates.io).** The format is not frozen: the container is
-version 2, the first release fixes the text, and until then a layout no production image holds may
+version 2, the 1.0 release fixes the text, and until then a layout no production image holds may
 change. The signed layouts did in October 2026, and the Rust API can still change. Everything below
 describes what the code in this repository does today. The table under
 [Guarantee levels](#guarantee-levels) names the example that runs each promise; merging has none

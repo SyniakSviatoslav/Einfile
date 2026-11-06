@@ -1,0 +1,44 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# The DOC seal protocol under a symbolic attacker (formal/tamarin). Separate from CI on purpose:
+# a red here blocks no merge and no release.
+# The prover's exit code does not carry a falsified lemma, so the last step holds its verdicts against
+# formal/tamarin/expected-verdicts.txt: a moved verdict is red. No run has produced a verdict yet, so
+# that list does not exist, and the step prints them and says so instead of inventing any.
+name: tamarin
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['formal/tamarin/**', 'tools/gates/tamarin-verdicts.py', '.github/workflows/tamarin.yml']
+permissions:
+  contents: read
+jobs:
+  prove:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@v5
+      - name: Install the prover
+        shell: bash
+        run: |
+          set -o pipefail
+          curl -fsSL https://github.com/tamarin-prover/tamarin-prover/releases/download/1.12.0/tamarin-prover-1.12.0-linux64-ubuntu.tar.gz | tar xz
+          sudo apt-get install -y maude graphviz
+      - name: Prove
+        timeout-minutes: 110
+        shell: bash
+        run: |
+          set -o pipefail
+          T=$(find . -type f -name tamarin-prover | head -1)
+          "$T" --prove formal/tamarin/ein_seal.spthy +RTS -N2 -RTS | tee tamarin.out
+      - name: Compare the verdicts
+        if: always()
+        shell: bash
+        run: python3 -I tools/gates/tamarin-verdicts.py tamarin.out --write tamarin.verdicts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: tamarin-out
+          path: |
+            tamarin.out
+            tamarin.verdicts

@@ -1,0 +1,17 @@
+einfile
+Copyright (c) 2026 The einfile project authors
+
+Licensed under the MIT license (LICENSE-MIT) or the Apache License, Version 2.0 (LICENSE-APACHE),
+at your option. That covers every file in this repository unless this file says otherwise. A file too small or too strict to carry
+a header (the conformance fixtures in fixtures/, Cargo.lock, baselines) is under the same terms.
+
+The crates have no dependencies outside this repository, except einfile-sig-mldsa (fips204, sha2 and
+their own, under their own licences) and bench/ (not published), whose competitor engines are
+optional and pinned in bench/Cargo.toml under their own licences.
+
+The JSON files in crates/einfile-sig-mldsa/tests/acvp are test vectors from NIST's ACVP-Server, not
+ours: their README says where they came from. The licence above does not claim them.
+
+The bytes "BEBOPST1" at the start of every file are the format's magic number, kept from the
+project this code came from. They are a constant, not a name. Bebop, the schema-based serialization
+format, is an unrelated project.

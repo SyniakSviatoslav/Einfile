@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# Bans yanked crates, wildcards and licences outside this list. Of the crates only einfile-sig-mldsa
+# has registry dependencies (fips204, sha2); bench/ has too, behind a feature. CI runs this per crate:
+# a config is not a gate.
+[advisories]
+version = 2
+yanked = "deny"
+ignore = []
+unmaintained = "none"
+
+[bans]
+multiple-versions = "warn"
+wildcards = "deny"
+allow-wildcard-paths = true
+
+[licenses]
+version = 2
+allow = [
+    "MIT",
+    "Apache-2.0",
+    "Apache-2.0 WITH LLVM-exception",
+    "BSD-2-Clause",
+    "BSD-3-Clause",
+    "Unicode-3.0",
+    "Unicode-DFS-2016",
+    "ISC",
+    "Zlib",
+    "CC0-1.0",
+    "Unlicense",
+]
+confidence-threshold = 0.8
+
+[sources]
+unknown-registry = "deny"
+unknown-git = "deny"
+allow-registry = ["https://github.com/rust-lang/crates.io-index"]
+allow-git = []

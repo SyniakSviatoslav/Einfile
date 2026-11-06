@@ -1,0 +1,191 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+name: CI
+
+# WHAT A GREEN BADGE HERE MEANS: each crate passed its own suite, the library stayed no_std with no
+# dependency of its own, and every gate in tools/gates/ exited 0, with its proof where it has one.
+# Seals are checked by real ML-DSA-65 only in einfile-sig-mldsa's own tests (NIST vectors, the stranger
+# test). The one-file readers in tools/verify count seals and do not check them.
+#
+# There is NO cargo workspace: each crate is entered with `cd`, and each keeps its own profile
+# (einfile-reader's panic=abort and opt-level=z would be ignored by a workspace). `cargo -p` from
+# the root would not work, and a mis-rooted --manifest-path can pass as exit 0. rust-toolchain.toml
+# pins the compiler. No job needs a secret.
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_TOOLCHAIN: '1.96.1'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@master
+        with: { toolchain: '${{ env.RUST_TOOLCHAIN }}', targets: wasm32-unknown-unknown, components: clippy }
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: |
+            crates/einfile-crc
+            crates/einfile-image
+            crates/einfile-kv
+            crates/einfile-log
+            crates/einfile-io
+            crates/einstore
+            crates/einfile-ffi
+            crates/einfile-reader
+            crates/einfile-sig-mldsa
+            crates/einfile-sync
+            crates/einfile-log-kani
+            fixtures/conform
+            bench
+      - name: einfile-image
+        run: cd crates/einfile-image && sh ../../tools/gates/ci-annotate.inc einfile-image cargo test
+      - name: einfile-kv
+        run: cd crates/einfile-kv && sh ../../tools/gates/ci-annotate.inc einfile-kv cargo test
+      - name: einfile-log
+        run: cd crates/einfile-log && sh ../../tools/gates/ci-annotate.inc einfile-log cargo test
+      - name: einfile-io
+        run: cd crates/einfile-io && sh ../../tools/gates/ci-annotate.inc einfile-io cargo test
+      - name: einfile-kv with KV v4
+        run: cd crates/einfile-kv && sh ../../tools/gates/ci-annotate.inc einfile-kv-tree cargo test --features tree
+      - name: einfile-io with KV v4
+        run: cd crates/einfile-io && sh ../../tools/gates/ci-annotate.inc einfile-io-tree cargo test --features tree
+      - name: einfile-crc (hardware CRC == software, every length)
+        run: cd crates/einfile-crc && sh ../../tools/gates/ci-annotate.inc einfile-crc cargo test --features std
+      - name: einfile-ffi
+        run: cd crates/einfile-ffi && sh ../../tools/gates/ci-annotate.inc einfile-ffi cargo test
+      - name: einfile-reader
+        run: cd crates/einfile-reader && sh ../../tools/gates/ci-annotate.inc einfile-reader cargo test
+      - name: einstore, with the README's quickstart as a doc test
+        run: cd crates/einstore && sh ../../tools/gates/ci-annotate.inc einstore cargo test
+      - name: einfile-log with feature sync
+        run: cd crates/einfile-log && sh ../../tools/gates/ci-annotate.inc einfile-log-sync cargo test --features sync
+      - name: einfile-sync (frames, sessions, the file transport, GRANT)
+        run: cd crates/einfile-sync && sh ../../tools/gates/ci-annotate.inc einfile-sync cargo test
+      - name: einfile-sync clippy
+        run: cd crates/einfile-sync && cargo clippy --all-targets -- -D warnings
+      - name: einfile-sig-mldsa (ML-DSA-65 behind Signer and Verifier)
+        run: cd crates/einfile-sig-mldsa && sh ../../tools/gates/ci-annotate.inc einfile-sig-mldsa cargo test
+      - name: einfile-sig-mldsa clippy, wasm32, no getrandom
+        run: |
+          cd crates/einfile-sig-mldsa
+          cargo clippy --all-targets -- -D warnings
+          cargo build --target wasm32-unknown-unknown
+          bad=$(cargo tree -e no-dev --prefix none | awk '{print $1}' | sort -u | { grep -x -e getrandom || true; })
+          [ -z "$bad" ] || { echo "::error::einfile-sig-mldsa links: $bad"; exit 1; }
+      # The harnesses run in kani.yml. Outside `cargo kani` this crate is empty, so this proves only
+      # that its manifest and its dependencies still resolve.
+      - name: einfile-log-kani resolves
+        run: cd crates/einfile-log-kani && cargo check
+      - name: python binding
+        run: |
+          (cd crates/einfile-ffi && cargo build --release)
+          EIN_FFI_LIB="$PWD/crates/einfile-ffi/target/release/libeinfile_ffi.so" python3 -I bindings/python/test_einstore.py
+      # T-ES-05: no_std for real, zero crates outside the library, no `unsafe`.
+      - name: no_std and dependency gate (T-ES-05)
+        run: |
+          for c in einfile-image einfile-kv einfile-log einfile-io; do
+            (cd crates/$c && cargo build --target wasm32-unknown-unknown) || exit 1
+            grep -q '^#!\[forbid(unsafe_code)\]' crates/$c/src/lib.rs || { echo "::error::$c lacks forbid(unsafe_code)"; exit 1; }
+          done
+          for c in einfile-crc einfile-image einfile-kv einfile-log; do
+            extra=$(cd crates/$c && cargo tree -e no-dev --prefix none | awk '{print $1}' | sort -u | { grep -v -x -e einfile-crc -e einfile-image -e einfile-kv -e einfile-log || true; })
+            [ -z "$extra" ] || { echo "::error::$c depends on: $extra"; exit 1; }
+          done
+      # T-ES-06: no new unchecked index in the three no_std crates.
+      - name: index gate (T-ES-06)
+        run: |
+          for c in einfile-image einfile-kv einfile-log; do
+            (cd crates/$c && cargo clippy --lib && cargo clippy --lib --features std) || exit 1
+          done
+
+  gates:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@master
+        with: { toolchain: '${{ env.RUST_TOOLCHAIN }}', targets: wasm32-unknown-unknown }
+      - uses: actions/setup-node@v5
+        with: { node-version: '22' }
+      - uses: actions/setup-python@v6
+        with: { python-version: '3.12' }
+      - name: the RustSec advisory checkout deps-audit reads
+        run: sh tools/deps/refresh.sh
+      - name: five readers, one answer
+        run: sh tools/gates/conformance.sh --prove --lazy
+      - name: the C ABI against the fixtures
+        run: sh tools/gates/ffi-readers.sh --prove
+      - name: one-file readers
+        run: sh tools/gates/verify-file.prove.sh && sh tools/gates/verify-file.sh
+      - name: hostile files
+        run: sh tools/gates/atk3.prove.sh && sh tools/gates/atk3.sh
+      - name: no cell reaches usize by `as`
+        run: sh tools/gates/cell-usize.prove.sh && sh tools/gates/cell-usize.sh
+      - name: benchmark regression, against this architecture's baseline
+        run: sh tools/gates/einfile-bench.prove.sh && sh tools/gates/einfile-bench.sh
+      - name: x86-only code compiles
+        run: sh tools/gates/x86-check.sh
+      - name: the reader's pin is what its source builds, in any directory
+        run: sh tools/gates/reader-repro.prove.sh && sh tools/gates/reader-repro.sh
+      - name: cited paths exist
+        run: sh tools/gates/paths.sh
+      - name: file size ratchet
+        run: sh tools/gates/file-size.sh
+      - name: dependency advisories
+        run: sh tools/gates/deps-audit.sh
+      - name: no claim the code does not make
+        run: sh tools/gates/pq-words.sh
+
+  lean:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      LC_ALL: C.UTF-8
+      ELAN_VERSION: v4.2.4
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/cache@v5
+        with:
+          path: |
+            ~/.elan
+            formal/lean/.lake
+          key: lean-${{ runner.os }}-${{ hashFiles('formal/lean/lean-toolchain') }}-
+      - name: elan (pinned) and the toolchain lean-toolchain names
+        run: |
+          if [ ! -x "$HOME/.elan/bin/elan" ]; then
+            curl -sSfL "https://github.com/leanprover/elan/releases/download/$ELAN_VERSION/elan-x86_64-unknown-linux-gnu.tar.gz" | tar xz -C "$RUNNER_TEMP"
+            "$RUNNER_TEMP/elan-init" -y --no-modify-path --default-toolchain none
+          fi
+          echo "$HOME/.elan/bin" >> "$GITHUB_PATH"
+          cd formal/lean && "$HOME/.elan/bin/elan" toolchain install "$(cat lean-toolchain)"
+      - name: lake build, no sorry, axiom census
+        run: LEAN_ONLY=census sh tools/gates/lean.sh
+
+  supply-chain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@master
+        with: { toolchain: '${{ env.RUST_TOOLCHAIN }}' }
+      - name: install cargo-deny
+        run: cargo install --locked cargo-deny
+      - name: cargo deny check, every crate
+        run: |
+          for c in crates/einfile-crc crates/einfile-image crates/einfile-kv crates/einfile-log crates/einfile-io crates/einstore crates/einfile-ffi crates/einfile-reader crates/einfile-sig-mldsa crates/einfile-sync bench; do
+            (cd "$c" && cargo deny --config "$GITHUB_WORKSPACE/deny.toml" check) || exit 1
+          done

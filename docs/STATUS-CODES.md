@@ -1,0 +1,158 @@
+<!-- SPDX-License-Identifier: MIT OR Apache-2.0 -->
+# Status codes of the einfile image readers: one vocabulary
+
+Status: **normative** from 2026-10-29 (lane W-ES-P4, R-EMBED-STORE §4.4 AC-ES-30/32, §5 row P4).
+Every reader of a KV image answers with one number from this table. A reader whose native refusal
+is not a number says here how it maps to one. The gate that holds them to it is
+`tools/gates/conformance.sh`: 11 fixtures × 5 readers, plus `--prove`. This file maps the reference readers onto the
+vocabulary of FORMAT §9.0; which text rules is said once, at the head of FORMAT.
+
+## 1. The readers
+
+| Reader | Code | How it answers |
+|---|---|---|
+| native | `fixtures/conform` (`einfile-conform read`) over `einfile-image` + `einfile-kv` | `kv status=<s> n=<n> root=<fold>`, mapping in §3 |
+| wasm32 | `crates/einfile-reader/src/abi.rs` `bw_open`, run by `tools/verify/ein-verify.mjs` | the `i32` it returns |
+| python | `tools/oracle/oracle.py` | `kv status=<s> ...`, and the same number as its exit code |
+| python, no library | `tools/verify/ein-verify.py` | `kv status=<s> ...` or `doc status=<s> ...`, and the status as its exit code |
+| bebop.bin | a self-hosted reader in the dowiz repository, not in this one; its columns below are that repository's measurements | a value, or an exit code (trap), mapped in §3 |
+| C ABI | `crates/einfile-ffi` `code_of`, via `bindings/python/einstore.py` | the `i32` every `einfile_*` call returns |
+
+## 2. The table
+
+Codes 1-12 are the reader codes and keep their `abi.rs` numbers on every surface. Codes 40-60 come
+from the C ABI's database layer (open, recovery, writes). Nothing else may be given to a code below.
+
+| Code | Name | Meaning | Who can give it |
+|---|---|---|---|
+| 0 | `OK` | read; `n` = entries, `root` = the FNV-1a 64 fold (FORMAT §9.1) | all |
+| 1 | `NO_SUPERBLOCK` | no valid superblock, or the live one was refused structurally: `arena_used` outside, PartTab outside, **misplaced** (`ptaway`), **PartTab crc bad** (`ptbad`), root outside (FORMAT §3.1). This is never a fallback | all |
+| 2 | `NOT_A_KV` | a superblock but no KV root (`empty`), or a slice/chain claim that does not hold, a KV base not strictly ascending in raw bytes, a DOC part that does not hold (a SEG with `last` < `first`), or the walk bound spent (FORMAT §9.0) | all |
+| 3 | `NOT_A_LOG` | log reader only (`bw_log`) | wasm32 |
+| 4 | `TRUNCATED` | log reader: a record cut short (an object shorter than a record's head, the cells it has being what counts), a chain short of the root's count, or one that never ends (FORMAT §9.2). A record cut by the image's end with its head inside is 10 | wasm32 |
+| 5 | `NULL_ARG` | a null pointer at the ABI. oracle.py also uses 5 for an S-1 break (superblock cells 13-14 non-zero), which no fixture has. **Two meanings, kept apart only by which surface gave them** | wasm32, C ABI, python |
+| 6-9, 11 | — | the `nodekey` (6) and `proj` (7-9, 11) readers. Not KV codes | `bw_key`, `bw_proj`, `oracle.py --proj` |
+| 10 | `BAD_CRC` | an object the read reached fails its crc (root, an array, a delta record, a log record, one cut by the image's end included) | native, wasm32, python, C ABI |
+| 12 | `UNKNOWN_VERSION` | a log root names a version above 2 (FORMAT §9.2), or the KV root names a version above 4 (W-ES-P9: every reader decodes v4 since W-ES-P8D/P8E, so `kv4stub` -- a v4 claim that does not hold -- is 2 now). W-MG-M1 (2026-10-30): fixture `doc` -- a DOC root, FORMAT §9.4, root-version 5 in the version cell -- yields 12 on every reader until M5 teaches them DOC | all |
+| 40 | `RECOVER` | the newest generation failed recovery and so did the fallback | C ABI |
+| 41 | `LAST_COMMIT` | the last commit's range does not hash to its anchor and every object in it checks (a re-sealed object, a changed header); bytes handed whole are never fallen back past (W-ES-P10, FORMAT §7 phase P2, fixture `kv4stale`). An object of the range that fails its crc is 10 instead, naming it | all |
+| 42 | `OBJECT_BAD` | an object met while walking the whole arena is cut short or fails its crc | C ABI |
+| 43 | `CORRUPT` | a cell the write path was about to trust disagrees with the image | C ABI |
+| 44 | `KEY_TOO_LONG` | key over `MAX_KEY_BYTES` | C ABI |
+| 45 | `VALUE_TOO_LONG` | value over `MAX_VALUE_BYTES` | C ABI |
+| 46 | `ARENA_FULL` | no room left in the arena | C ABI |
+| 47 | `LIMIT` | another format limit (FORMAT §10) | C ABI |
+| 48 | `TOO_SMALL` | an image below `MIN_BYTES` | C ABI |
+| 49 | `WRITER_BUSY` | reserved: writers are optimistic since W-ES-P19b, nothing returns it | C ABI |
+| 50 | `LOCKED` | another process holds the store's lock | C ABI |
+| 51 | `POISONED` | an earlier write failed; reopen | C ABI |
+| 52 | `EXISTS` | create over a device that already holds a KV image | C ABI |
+| 53 | `IO` | the device said no | C ABI |
+| 54 | `DURABILITY` | more durability asked than the device gives | C ABI |
+| 55 | `PLAN` | the staged image cannot be flushed over the durable one | C ABI |
+| 56 | `BAD_ARG` | an argument out of range | C ABI |
+| 57 | `BUSY` | a handle still has open children | C ABI |
+| 58 | `UNSUPPORTED` | this build cannot do that | C ABI |
+| 59 | `PANIC` | a panic caught at the boundary | C ABI |
+| 60 | `OTHER` | a `Refusal` variant newer than the ABI | C ABI |
+| 70 | `NOT_OPEN` | a call with no image open | einfile-reader ABI, never a read |
+| 71 | `NOT_FOUND` | the key is not in the image | einfile-reader ABI, never a read |
+| 73 | `OUT_OF_RANGE` | a log index past its length | einfile-reader ABI, never a read |
+| 74 | `NOT_A_DOC` | `bw_counts` against a KV or a log (W-MG-M5) | einfile-reader ABI, never a read |
+| 75 | `CUT_UNDECLARED` | a DOC's log segment (a SEG under the root: records that left the file) is named by no TRUNCATE record on the kept chain -- the file is whole, the cut is undeclared (W-MG-M3 rule, FORMAT §9.4). A status of `verify`, never of the open: the open line stays `doc status=0 n=<records> root=<log fold>`, the next line reads `verify status=75` with no counter, and the exit code is 75 (FORMAT §9.0); at the ABI `bw_open` 0, `bw_verify(1)` 75, `bw_counts` -75. | einfile-reader, ein-verify.py, einfile-io `docverify`, C ABI |
+| 76 | `UNPINNED` | the embedded reader's sha256 is not the one this `read.mjs` pins: it is not run; the file agreeing with itself is not a verify | `examples/read.mjs`, host only |
+| 77 | `MODULE_REFUSED` | the embedded module has an import, a start section, or no bounded memory | `examples/read.mjs`, host only |
+| 78 | `HOST_FAILED` | the host stopped the reader, or could not read the file | `examples/read.mjs`, `ein-verify.mjs`, `ein-verify.py` |
+
+**DOC (W-MG-M5, FORMAT §9.4-9.5).** The five conformance readers keep answering 12 on `doc.store` (they
+refuse by name, as §2 row 12 says). The two ONE-FILE readers of `tools/verify` -- `ein-verify.mjs`
+(einfile-reader, `bw_kind` = 5) and `ein-verify.py` (stdlib) -- READ it and print
+`doc status=0 n=<records> root=<the LOG fold>` plus a line that starts with the word `verify`: `verify records=...` or, refused, `verify status=<s>` (FORMAT §9.4 gives its nineteen fields and what is not among them); `tools/verify/gate.sh`
+holds both to each other and to `doc.expected`'s `doc_n` / `doc_root` / `doc_verify`. Their `checked=0` is
+not a defect to fix: neither carries a signature algorithm, so `seals` is a COUNT and the readers say so, on stderr, in a line that starts `seals COUNTED, not CHECKED:`. A refused line starts with `kv` whatever the root was: a refusal has no kind (FORMAT §9.0).
+W-MG-M5b: `segments cut cut_redacted declared` appended to that line; with no
+signature a TRUNCATE or FORGOTTEN counts on its chain alone (`Verifier::checks_signatures` false), a segment no
+TRUNCATE names is 75, and a time anchor is printed as PRESENT (`anchor kind= over= time_ms= proof_len=`), never verified.
+W-MG-M2: `merges merges_bad` appended the same way. `doc_verify`, which judges seals, exits 0 HOLDS, 3 DOES NOT HOLD, 2 not a sealed image, and 4 `NOT CHECKED` when all else stands and a MERGE's conflict list cannot be re-derived because the file was cut: never clean.
+
+## 3. Mappings that are not already this number
+
+**native** (`einfile-conform read`): `pick_checked_in` refuses → 1; `last_commit_in` (W-ES-P10) →
+`Object` 10 / `Anchor` 41; `Store::root()` is `None` → 2; `Kv::load_checked`: `KvError::NotKv` → 2,
+`BadCrc` → 10, `UnknownVersion` → 12.
+
+**wasm32** (`src/lib.rs` `open`): `Store::pick` → 1, then `last_commit_in` → 10 / 41 (`Refusal::LastCommit`).
+
+**python** (`oracle.py` `last_commit`): the same rule re-derived from the bytes: 10 / 41 after the pick.
+
+**C ABI** (`crates/einfile-ffi/src/lib.rs` `code_of`): `Refusal::Pick` → 1, `NotKv` → 2, `BadCrc` →
+10, `UnknownVersion` → 12, and the rest 40-60 as in §2. A torn anchor over adopted bytes is named by
+`db/adopt.rs` `name_torn`, which calls the same `last_commit_in`.
+
+**bebop.bin** (`kv.bp`; `bebop-lang/docs/TRAPS.md`):
+
+| bebop answer | Status |
+|---|---|
+| exit 0, a value | 0 (`n` from `kv.bin n`, `root` from `kv.bin h`) |
+| exit 0, `-3` (a v3 root whose chain or base-order claims do not hold) | 2 |
+| trap 79 (PartTab off its home, `st_open`) | 1 |
+| trap 77 (live PartTab fails its crc; store.bp `st_open` (W-PRELUDE; was kv.bp `kv_precheck`, W-ES-P4)) | 1 |
+| trap 76 (no PartTab, so no KV root; `kv_precheck`, W-ES-P4) | 2 |
+| trap 78 (KV version above 4, `pj_kv_known`) | 12 |
+| trap 74 (the anchor is torn and an object of `[mark, arena_used)` fails its crc; `kv_anc_check`, W-ES-P10) | 10 |
+| trap 75 (the anchor is torn and every object of the range checks; `kv_anc_check`, W-ES-P10) | 41 |
+| exit 0, `-10` (a v4 node or value fails its crc, `kv4.bp`, W-ES-P8D) | 10 |
+
+bebop's `BAD_CRC` covers the LAST commit's range (trap 74, every version) and every v4 object it
+reads (`kv4.bp`'s `-10`). `kv.bp` does NOT check the crcs of a v1-v3 base or chain record of an
+OLDER commit: a flipped bit there is read as data (status 0 with a moved fold), which no fixture
+asks for and this table records rather than hides. One corner, recorded: inside a TORN range,
+`st_verify_range` counts a zero-length object as bad (trap 74, 10) where the Rust rule hashes its
+empty payload (0 = 0, so it walks on and may say 41); only an empty-schema init (`kv0`) writes such
+objects and no fixture tears one. Until W-ES-P10 a READ phase went through
+`st_open`'s recovery and a torn last commit FELL BACK to generation k-1 (the one divergence `--prove`
+used to allow); `kv_precheck` now applies FORMAT §7's rule for bytes before `st_open` runs.
+
+## 4. The measured matrix (2026-10-29, `conformance.sh --prove`, aarch64, every cell read)
+
+| Fixture | Want | native | wasm32 | python | bebop.bin | C ABI |
+|---|---|---|---|---|---|---|
+| kv (v1) | 0 n=5 −211109995167561145 | = | = | = | = | = |
+| kv2 (v2) | 0 n=5 −211109995167561145 | = | = | = | = | = |
+| kv3 (v3, D=3) | 0 n=5 −4092201869538170098 | = | = | = | = | = |
+| ptaway | 1 | 1 | 1 | 1 | 1 (trap 79) | 1 |
+| kv4stub | 2 (since W-ES-P8D: a v4 claim whose cells 1-4 are not zero; was 12 while no reader decoded v4) | 2 | 2 | 2 | 2 (`-3`) | 2 |
+| kv3max (v3, D=32) | 0 n=27 −6264351955216461874 | = | = | = | = | = |
+| kv3c (compacted) | 0 n=27 −6264351955216461874 | = | = | = | = | = |
+| torn (SB torn) | 0 n=26 −5357977772297964327 | = | = | = | = | = |
+| ptbad | 1 | 1 | 1 | 1 | 1 (trap 77) | 1 |
+| empty | 2 | 2 | 2 | 2 | 2 (trap 76) | 2 |
+| kv0 (empty KV) | 0 n=0 −3750763034362895579 | = | = | = | = | = |
+
+`--prove`: bit 0 of cell 1677 of kv3max (the first value cell of the newest delta record) was
+flipped. native, wasm32, python and C ABI → 10. bebop.bin → 0 n=26 −5357977772297964327, which is
+generation 33. The anchor failed, so `st_open` fell back. All five answers moved.
+
+### 4.1 W-ES-P10 (2026-10-30): the last-commit rule and the lazy open
+
+The two new fixtures and the re-measured `--prove`, every reader, MEASURED 2026-10-30 by
+`tools/gates/conformance.sh --prove --lazy` on aarch64 (21 fixtures, each `5 of 5 agree`; the lines
+are quoted in the W-ES-P10 hand-back):
+
+| Fixture | Want | native | wasm32 | python | bebop.bin | C ABI |
+|---|---|---|---|---|---|---|
+| kv4stale (kv4badf without the re-anchor) | 41 | 41 | 41 | 41 | 41 (trap 75) | 41 |
+| kv4old (a reachable object of an OLDER commit, one bit) | 10 | 10 | 10 | 10 | 10 (kv4.bp −10) | 10 |
+| `--prove` (kv3max, newest record's value cell) | 10 | 10 | 10 | 10 | 10 (trap 74) | 10 |
+
+`--lazy` (C ABI on kv4old): `open(Anchor)=0` reads it, `verify(Anchor)=0`, `verify(Reachable)=10`,
+`verify(WholeArena)=10`, `open(Reachable)=10`; the clean kv4deep verifies 0. That is the lazy
+open's documented guarantee (FORMAT §7), not a gap.
+
+## 5. Not covered
+
+AC-ES-31 (the two writers byte-identical) is out of reach. `kv.bp` writes v2 (`i`) and never a
+delta chain, so it cannot write kv3max. The conformance here is one-way: bebop reads what Rust
+writes. Statuses 3-9, 11 and 40-60 come from no KV fixture. A test that enumerates `Refusal`
+against this table (T-ES-32's second half) is for the owners of `einfile-ffi`/`abi.rs`. This lane
+does not edit those crates.

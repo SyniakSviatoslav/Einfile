@@ -1,0 +1,6 @@
+# tools/gates/lean.axioms -- every axiom an Einfile.* declaration may rest on. A new line is a new
+# trusted assumption. A line nothing uses any more is red: delete it. `sorryAx` is never allowed.
+# Written by tools/split/split.py from the closure, not from a census: step 5's census decides.
+propext
+Classical.choice
+Quot.sound

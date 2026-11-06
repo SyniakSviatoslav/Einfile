@@ -1,0 +1,5 @@
+# SPDX-License-Identifier: MIT OR Apache-2.0
+# The wall clock is read at the entry point and passed down as data.
+disallowed-methods = [
+    { path = "std::time::SystemTime::now", reason = "read the clock once at the entry point and pass it down" },
+]

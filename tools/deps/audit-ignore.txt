@@ -1,0 +1,2 @@
+# Dated ignores for tools/deps/rustsec.py (read by tools/gates/deps-audit.sh).
+# ID  LOCK_DIR  UNTIL  reason. Past UNTIL, or matching nothing, the gate REFUSES.

@@ -1,0 +1,103 @@
+// SPDX-License-Identifier: MIT OR Apache-2.0
+//! einfile-bench -- R-EMBED-STORE P7 (§4.6): einstore vs redb, LMDB (heed) and SQLite on the same
+//! workloads in the same process, and the einfile regression gate.
+//!
+//!   einfile-bench full <engines|all> <N> <VS> <reps> [rows]   the table. `all` needs --features
+//!                                                         competitors,mldsa; a missing engine
+//!                                                         stops the run (rc 2), it is never skipped
+//!   einfile-bench gate <baseline> [reps]                       0 green / 1 RED / 2 no usable baseline
+//!   einfile-bench gate-record [reps] [runs] [tol_pct]          print a baseline file
+//!
+//! Scratch databases live under $ES_BENCH_DIR (default ./es-bench-data) and are deleted after
+//! each engine: the directory itself goes at the end of a run, so name one nothing else lives in.
+//! Engines: einfile, einfile4 (v4 tree through Db), redb, lmdb, sqlite, signed (a sealed DOC file, not a
+//! KV: src/signed.rs). Rows: load size size_alloc open verify get_hot prefix get_cold put put_commit
+//! compact put_durable put_normal delete; signed: load_signed verify_signed seal merge archive.
+//! Every run opens with `# machine` lines and every row prints its spread: `RES|` is what to read.
+use einfile_bench::{einfile, einfile4, gate, machine, work};
+#[cfg(feature = "competitors")]
+use einfile_bench::{lmdb_e, redb_e, sqlite_e};
+#[cfg(feature = "mldsa")]
+use einfile_bench::signed;
+
+use std::path::PathBuf;
+
+fn arg<T: std::str::FromStr>(a: &[String], i: usize, d: T) -> T {
+    a.get(i).and_then(|s| s.parse().ok()).unwrap_or(d)
+}
+
+fn scratch() -> PathBuf {
+    PathBuf::from(std::env::var("ES_BENCH_DIR").unwrap_or_else(|_| "einfile-bench-data".into()))
+}
+
+fn run_one(engine: &str, c: &work::Cfg) -> Vec<(String, u64)> {
+    match engine {
+        "einfile" => work::run::<einfile::Einfile>(c),
+        "einfile4" => work::run::<einfile4::Einfile4>(c),
+        #[cfg(feature = "competitors")]
+        "redb" => work::run::<redb_e::Redb>(c),
+        #[cfg(feature = "competitors")]
+        "lmdb" => work::run::<lmdb_e::Lmdb>(c),
+        #[cfg(feature = "competitors")]
+        "sqlite" => work::run::<sqlite_e::Sqlite>(c),
+        #[cfg(feature = "mldsa")]
+        "signed" => signed::run(c),
+        _ => {
+            eprintln!("einfile-bench: engine {engine} unknown or not built (redb, lmdb, sqlite need --features competitors; signed needs --features mldsa)");
+            std::process::exit(2)
+        }
+    }
+}
+
+fn main() {
+    let a: Vec<String> = std::env::args().collect();
+    match a.get(1).map(String::as_str).unwrap_or("") {
+        "full" => {
+            let engines: Vec<String> = match a.get(2).map(String::as_str).unwrap_or("all") {
+                "all" => ["einfile", "einfile4", "redb", "lmdb", "sqlite", "signed"].map(String::from).to_vec(),
+                list => list.split(',').map(String::from).collect(),
+            };
+            let c = work::Cfg {
+                n: arg(&a, 3, 10_000),
+                vs: arg(&a, 4, 256),
+                reps: arg(&a, 5, 5).max(5),
+                dir: scratch(),
+                only: a.get(6).map(|s| s.split(',').map(String::from).collect()).unwrap_or_default(),
+            };
+            println!("# einfile-bench full engines={engines:?} N={} VS={} reps={} arch={}", c.n, c.vs, c.reps, std::env::consts::ARCH);
+            machine::print(&c.dir);
+            let mut sums: Vec<(String, String, u64)> = vec![];
+            for en in &engines {
+                for (row, s) in run_one(en, &c) {
+                    sums.push((row, en.clone(), s));
+                }
+            }
+            let mut bad = 0;
+            for (row, en, s) in &sums {
+                if let Some((_, e0, s0)) = sums.iter().find(|(r, _, _)| r == row) {
+                    if s0 != s {
+                        println!("CHECK|{row}|{en} read {s}, {e0} read {s0}|MISMATCH");
+                        bad += 1;
+                    }
+                }
+            }
+            println!("CHECK|checksums|{} rows compared across engines|{}", sums.len(), if bad == 0 { "EQUAL" } else { "MISMATCH" });
+            let _ = std::fs::remove_dir_all(scratch());
+            std::process::exit(if bad == 0 { 0 } else { 1 });
+        }
+        "gate" => {
+            let base = PathBuf::from(a.get(2).expect("einfile-bench gate <baseline> [reps]"));
+            let rc = gate::check(&base, &scratch().join("gate"), arg(&a, 3, 15));
+            let _ = std::fs::remove_dir_all(scratch());
+            std::process::exit(rc)
+        }
+        "gate-record" => {
+            gate::record(&scratch().join("gate"), arg(&a, 2, 15), arg(&a, 3, 5), arg(&a, 4, 15.0));
+            let _ = std::fs::remove_dir_all(scratch());
+        }
+        _ => {
+            eprintln!("usage: einfile-bench full <engines|all> <N> <VS> <reps> [rows] | gate <baseline> [reps] | gate-record [reps] [runs] [tol]");
+            std::process::exit(2)
+        }
+    }
+}

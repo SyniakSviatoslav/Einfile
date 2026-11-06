@@ -10,7 +10,7 @@ instead of reading it as data. A commit either finished or is not there, and a l
 a signature (a *seal*) that makes a later edit visible. A file can also carry evidence from outside
 itself of when a record existed, and an archive file can carry its own reader.
 
-**This is pre-1.0 and not published to any registry.** The format is not frozen: the container is
+**This is pre-1.0 (0.1.0 on crates.io).** The format is not frozen: the container is
 version 2, the first release fixes the text, and until then a layout no production image holds may
 change. The signed layouts did in October 2026, and the Rust API can still change. Everything below
 describes what the code in this repository does today. The table under
@@ -80,11 +80,11 @@ This block is compiled and run by `cargo test --doc`. A refusal is a value with 
 panic: see `Refusal`, and the numbers every reader shares in
 [`docs/STATUS-CODES.md`](../../docs/STATUS-CODES.md).
 
-The crates are not on crates.io, so depend on a checkout by path:
+Add it from crates.io:
 
 ```toml
 [dependencies]
-einstore = { path = "../einfile/crates/einstore" }
+einstore = "0.1"
 ```
 
 ## Guarantee levels

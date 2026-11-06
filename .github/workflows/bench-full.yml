@@ -1,5 +1,5 @@
 # SPDX-License-Identifier: MIT OR Apache-2.0
-# The whole benchmark table, by hand, on a machine anyone can name. Manual only, and nothing depends
+# The whole benchmark table, by hand (Run workflow, or a push to `bench-run`), on a machine anyone can name. Manual only, and nothing depends
 # on it: no gate reads this result, a red run blocks no merge and no release. The regression gate is
 # tools/gates/einfile-bench.sh, a ratio; this is the table, absolute numbers.
 #
@@ -10,6 +10,10 @@
 # by the same command, which the raw output's `# machine` lines describe.
 name: einfile-bench-full
 on:
+  # A push to the branch `bench-run` runs the table with the defaults below, for a machine that holds
+  # no API token: `git push origin HEAD:bench-run`. Still by hand, never on main.
+  push:
+    branches: [bench-run]
   workflow_dispatch:
     inputs:
       n:
@@ -28,9 +32,9 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 180
     env:
-      N: ${{ inputs.n }}
-      VS: ${{ inputs.vs }}
-      REPS: ${{ inputs.reps }}
+      N: ${{ inputs.n || '100000' }}
+      VS: ${{ inputs.vs || '256' }}
+      REPS: ${{ inputs.reps || '5' }}
     steps:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@master

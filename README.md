@@ -1,18 +1,14 @@
 <!-- SPDX-License-Identifier: MIT OR Apache-2.0 -->
 <!--
-DRAFT for the future public repository `einfile`. Not published. Nothing here has been compiled:
-the crate names, tool names and paths are the ones SPLIT-PLAN.md proposes, and they do not exist yet.
-Every `TO MEASURE` cell is empty on purpose. Marked places to settle before publishing:
-  [PLACEHOLDER: ILLUSTRATION]           below the title
-  HOLD: VALUE LINE                      below the tagline, needs a lawyer
-  HOLD: COMPARISON SENTENCE             How it compares, with its checklist
-  [PLACEHOLDER: COMPARISON TABLE LINK]  How it compares
+Maintainer notes (not rendered). Every `TO MEASURE` cell stays empty until one run on one named machine
+(.github/workflows/bench-full.yml or a lab box), quoted with its command. Held back, each in a comment below:
+  VALUE LINE           below the tagline: show a lawyer before it renders
+  COMPARISON SENTENCE  How it compares: renders only with the dated table it cites
+  ILLUSTRATION         an original dog, not drawn yet
 Word rule: no claim of priority or exclusivity; `tools/gates/pq-words.sh` applies: say what runs, name the primitive.
 -->
 
 # einfile
-
-<p align="center"><em>[PLACEHOLDER: ILLUSTRATION. An original dog illustration goes here. Not drawn yet.]</em></p>
 
 **One file that merges without a server, proves its history, and reads itself.**
 
@@ -22,10 +18,10 @@ Reading itself means archive files.
 
 A database that is one file, like SQLite. Unlike SQLite, two copies merge, and anyone can check the file was not altered. See [When not to use it](#when-not-to-use-it).
 
-Designed for erasure: a record can be removed from a signed history without breaking it, and an erased id confirms no guess. Compliance is your organisation's, not a library's.
-
 <!--
-HOLD: VALUE LINE. Operator wording, verbatim. Show a lawyer before publishing. Add no legal claim. `Erasure and guesses` in Limits must stay.
+HOLD: VALUE LINE. Operator wording, verbatim. Show a lawyer before it renders. Add no legal claim. `Erasure and guesses` in Limits must stay.
+
+Designed for erasure: a record can be removed from a signed history without breaking it, and an erased id confirms no guess. Compliance is your organisation's, not a library's.
 -->
 
 ---
@@ -159,13 +155,11 @@ Conditions, all required before it goes live; remove the rendered HOLD line and 
 - [ ] The word `found` is not replaced by `there is`. No word of priority or exclusivity is added.
 - [ ] ML-DSA, Bitcoin and "script" stay out of the sentence: others have them, or they do not run yet.
 - [ ] 38 is the number of rows in the table, einfile not counted. If the table changes, the number changes with it.
--->
-
-**[HOLD: this sentence goes live once public code checks seals. It is not true of this repository yet.]**
 
 > We compared 38 systems on 2026-11-01 and found none that keeps, in one file, per-device signed history, offline merge with named conflicts, signed erasure, and its own sandboxed reader; the table and its sources are here, and corrections are welcome.
 
-**Table and sources:** [PLACEHOLDER: COMPARISON TABLE LINK]
+**Table and sources:** COMPARISON TABLE LINK
+-->
 
 Other tools do things better than Ein. Pick them when:
 

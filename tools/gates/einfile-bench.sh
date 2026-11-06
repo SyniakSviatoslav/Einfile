@@ -32,7 +32,7 @@ BIN=""
 if [ -z "$BIN" ]; then
   T="${CARGO_TARGET_DIR:-$CRATE/target}"
   ( cd "$CRATE" && CARGO_TARGET_DIR="$T" cargo build --release --quiet ) || { echo "einfile-bench: BUILD FAILED"; exit 1; }
-  BIN="$T/release/es-bench"
+  BIN="$T/release/einfile-bench"
 fi
 [ -x "$BIN" ] || { echo "einfile-bench: no binary at $BIN"; exit 1; }
 SCR=$(mktemp -d "${TMPDIR:-/tmp}/es-bench-gate.XXXXXX")

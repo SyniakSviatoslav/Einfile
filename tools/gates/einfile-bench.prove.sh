@@ -10,7 +10,7 @@
 set -u
 HERE=$(cd "$(dirname "$0")" && pwd)
 ROOT=$(cd "$HERE/../.." && pwd)
-G="$HERE/es-bench.sh"
+G="$HERE/einfile-bench.sh"
 SCR=$(mktemp -d "${TMPDIR:-/tmp}/es-bench-prove.XXXXXX")
 T="${CARGO_TARGET_DIR:-$ROOT/bench/target}-prove"
 fail=0
@@ -42,17 +42,17 @@ want 0 "the tree" sh "$G"
 
 if mutant 'keys.iter().map(|k| acc_of(&kv.get(k).unwrap().expect("present")))' \
           'keys.iter().map(|k| { std::hint::black_box(kv.get(k).unwrap()); acc_of(&kv.get(k).unwrap().expect("present")) })'; then
-  want 1 "A: every get done twice" sh "$G" --bin "$T/release/es-bench"
+  want 1 "A: every get done twice" sh "$G" --bin "$T/release/einfile-bench"
 else fail=1; fi
 
 if mutant 'kv.compacted_bytes_fit(MAX_IMAGE).expect("image fits")' \
           '{ std::hint::black_box(kv.compacted_bytes_fit(MAX_IMAGE)); kv.compacted_bytes_fit(MAX_IMAGE).expect("image fits") }'; then
-  want 1 "B: the image built twice" sh "$G" --bin "$T/release/es-bench"
+  want 1 "B: the image built twice" sh "$G" --bin "$T/release/einfile-bench"
 else fail=1; fi
 
 if mutant 'KvIn::open(View::new(bytes)).is_ok()' \
           'std::hint::black_box(KvIn::open(View::new(bytes)).is_ok()) && KvIn::open(View::new(bytes)).is_ok()'; then
-  want 1 "C: verify run twice" sh "$G" --bin "$T/release/es-bench"
+  want 1 "C: verify run twice" sh "$G" --bin "$T/release/einfile-bench"
 else fail=1; fi
 
 rm -rf "$SCR"

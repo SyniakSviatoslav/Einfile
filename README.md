@@ -1,7 +1,7 @@
 <!-- SPDX-License-Identifier: MIT OR Apache-2.0 -->
 <!--
-Maintainer notes (not rendered). Every `TO MEASURE` cell stays empty until one run on one named machine
-(.github/workflows/bench-full.yml or a lab box), quoted with its command. Held back, each in a comment below:
+Maintainer notes (not rendered). Benchmark numbers come from one run on one named machine
+(.github/workflows/bench-full.yml or a lab box), quoted with its command and raw output. Held back, each in a comment below:
   VALUE LINE           below the tagline: show a lawyer before it renders
   COMPARISON SENTENCE  How it compares: renders only with the dated table it cites
   ILLUSTRATION         an original dog, not drawn yet
@@ -164,7 +164,7 @@ Conditions, all required before it goes live; remove the rendered HOLD line and 
 Other tools do things better than Ein. Pick them when:
 
 - **SQLite:** you want SQL and a file format stable since 2004. Its session extension also carries changes between copies, with three conflict policies, when a session recorded them.
-- **DoltLite:** you want SQL with merge. It is a fork of SQLite with branches, merge and conflict tables in one file, and it publishes conformance numbers where this README still has `TO MEASURE`.
+- **DoltLite:** you want SQL with merge. It is a fork of SQLite with branches, merge and conflict tables in one file, and it publishes SQL conformance numbers.
 - **Dolt:** you want a versioned SQL database with GPG-signed commits, conflicts as ordinary tables, and DoltHub.
 - **Automerge:** you want merge to decide. It merges nested structures and text by itself, where Ein names a conflict and waits for a person.
 - **Git:** you hold text. It has signed commits, many implementations and a habit people already have, and OpenTimestamps fits into its signing.
@@ -234,35 +234,44 @@ There are no fuzzers: every test case is named and one-off, so coverage is exact
 
 ## Benchmarks
 
-**There are no numbers here yet, on purpose.** Every `TO MEASURE` cell will be filled from one run on one named machine, with the command below. Rows where Ein loses stay visible. No number from an older run appears here.
+**One run, one named machine, medians of 5.** Raw output: [`docs/bench/2026-11-06-github-x86_64.txt`](docs/bench/2026-11-06-github-x86_64.txt) ([the run](https://github.com/SyniakSviatoslav/Einfile/actions/runs/42212439407)). Rows where Ein loses stay visible.
 
-**Machine:** `TO MEASURE` (CPU, RAM, storage device, filesystem, kernel, `rustc` version, commit)
+**Machine:** a shared GitHub-hosted runner (`ubuntu-24.04`): AMD EPYC 9V74, 4 threads, 16 GB RAM, ext4 on an Azure virtual NVMe disk (MSFT NVMe Accelerator v1.0), Linux 7.0.0-1017-azure, `rustc` 1.96.1, commit `22f8fa2`, N = 100 000 records, 256-byte values. A shared VM is not a lab machine: its neighbours and disk change from run to run, so the fsync and cold-read rows say little, and two runs are not comparable to each other.
 
 ```sh
 cd bench
 ES_BENCH_DIR=/path/on/the/disk/under/test \
-  cargo run --release --features competitors -- full einfile,einfile4,redb,lmdb,sqlite <N> 256 5
+  cargo run --release --locked --features competitors,mldsa -- full all 100000 256 5
 ```
 
 | Row | Harness row | Unit | Ein (KV v3) | Ein (KV v4) | SQLite | LMDB | redb |
 |---|---|---|---|---|---|---|---|
-| get | `get_hot` | ns/get | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` |
-| prefix | `prefix` | us/scan | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` |
-| cold read | `get_cold` | ms | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` |
-| open | `open` | us | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` |
-| put, unsynced | `put` | us/put | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` |
-| durable commit | `put_durable` | ms/commit | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` |
-| integrity check | `verify` | ms | `TO MEASURE` | `TO MEASURE` | `TO MEASURE` | no such call | `TO MEASURE` |
+| get | `get_hot` | ns/get | 788 | 531 | 2 564 | **438** | 526 |
+| prefix | `prefix` | us/scan | 4.73 | 6.75 | 22.1 | **3.59** | 7.93 |
+| cold read | `get_cold` | ms | **55.7** | 60.4 | 169 | 83.8 | 130 |
+| open | `open` | us | 5 140 | 12 937 | 169 | **60** | 152 |
+| put, unsynced | `put` | us/put | 2 662 | 11.9 | 8.16 | **4.49** | 5.49 |
+| delete, unsynced | `delete` | us/delete | 2 209 | 12.3 | 8.63 | **4.35** | 6.62 |
+| durable commit | `put_durable` | ms/commit | 0.325 | 0.330 | 0.210 | 0.161 | **0.146** |
+| bulk load | `load` | ms | 189 | 181 | 398 | **138** | 195 |
+| compact | `compact` | ms | 164 | 208 | 135 | **97** | 248 |
+| size on disk | `size` | bytes/record | **303** | 313 | 315 | 317 | 337 |
+| integrity check | `verify` | ms | 20.0 | 20.5 | 23.3 | no such call | **13.5** |
 
-Durable means: Ein `Durability::Data`, SQLite WAL with `synchronous=FULL`, redb `Durability::Immediate`, LMDB default flags. Competitor versions are pinned in [`bench/Cargo.toml`](bench/Cargo.toml).
+Read it plainly: point and prefix reads are in the same range as redb and behind LMDB; a cold open-and-read is the fastest here; `open` is 30 to 215 times slower than the others, because Ein's open recovers the last commit's anchor; KV v3 writes are hundreds of times slower than everyone (each small commit rewrites the image), and KV v4 brings them to within 2 to 3 times of LMDB; a durable commit costs about twice LMDB's. The harness compared 17 checksums across the five engines: all equal.
 
-Rows the others in this table lack:
+Durable means: Ein `Durability::Data`, SQLite WAL with `synchronous=FULL`, redb `Durability::Immediate`, LMDB default flags. Competitor versions are pinned in [`bench/Cargo.toml`](bench/Cargo.toml): redb 4.4.0, heed 0.22.1 (LMDB), rusqlite 0.32.1.
+
+Rows the others in this table lack (same run, N = 100 000, a seal every 32 records, real ML-DSA-65):
 
 | Row | Unit | Ein | Harness |
 |---|---|---|---|
-| verify a signed file: every counter | records/s | `TO MEASURE` | to be written |
-| seal cost: one device commit | ms and bytes | `TO MEASURE` | to be written |
-| archive size: added per file | bytes | `TO MEASURE` | to be written |
+| verify a signed file, every seal checked | records/s | 121 849 (821 ms for the file) | `verify_signed_rate` |
+| the same walk, seals counted, none checked | ms | 329 | `verify_counted` |
+| seal cost: one device commit, in memory | ms and bytes | 0.491 ms, 4 144 bytes (256-byte body included) | `seal_commit`, `seal_bytes` |
+| sign one / verify one, through the seam | ms | 0.474 / 0.156 | `sign_one`, `verify_one` |
+| merge two devices, 100 000 records, all verified, one MERGE sealed | ms | 1 781 | `merge` |
+| archive size: added per file | bytes | 231 744 (reader 136 484, format text 95 127) | `archive_added` |
 
 The archive row's formula is in FORMAT §9.5.
 

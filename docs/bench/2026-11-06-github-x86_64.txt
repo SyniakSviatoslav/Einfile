@@ -1,0 +1,156 @@
+# einfile-bench full, raw output. Workflow .github/workflows/bench-full.yml, a push to bench-run.
+# commit 22f8fa2ff80ff4ec75b6287b694adc4a82461319
+# run https://github.com/SyniakSviatoslav/Einfile/actions/runs/42212439407
+# N=100000 VS=256 REPS=5
+# ---- machine.txt ----
+# # a shared GitHub-hosted runner, not a NVMe lab machine: see this workflow header
+# Architecture:                            x86_64
+# CPU op-mode(s):                          32-bit, 64-bit
+# Address sizes:                           48 bits physical, 48 bits virtual
+# Byte Order:                              Little Endian
+# CPU(s):                                  4
+# On-line CPU(s) list:                     0-3
+# Vendor ID:                               AuthenticAMD
+# Model name:                              AMD EPYC 9V74 80-Core Processor
+# CPU family:                              25
+# Model:                                   17
+# Thread(s) per core:                      2
+# Core(s) per socket:                      2
+# Socket(s):                               1
+# Stepping:                                1
+# BogoMIPS:                                5192.27
+# Flags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology tsc_reliable nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq ssse3 fma cx16 pcid sse4_1 sse4_2 movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy svm cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw topoext vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves user_shstk avx512_bf16 clzero xsaveerptr rdpru arat npt nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold v_vmsave_vmload avx512vbmi umip avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid fsrm
+# Virtualization:                          AMD-V
+# Hypervisor vendor:                       Microsoft
+# Virtualization type:                     full
+# L1d cache:                               64 KiB (2 instances)
+# L1i cache:                               64 KiB (2 instances)
+# L2 cache:                                2 MiB (2 instances)
+# L3 cache:                                32 MiB (1 instance)
+# NUMA node(s):                            1
+# NUMA node0 CPU(s):                       0-3
+# Vulnerability Gather data sampling:      Not affected
+# Vulnerability Ghostwrite:                Not affected
+# Vulnerability Indirect target selection: Not affected
+# Vulnerability Itlb multihit:             Not affected
+# Vulnerability L1tf:                      Not affected
+# Vulnerability Mds:                       Not affected
+# Vulnerability Meltdown:                  Not affected
+# Vulnerability Mmio stale data:           Not affected
+# Vulnerability Old microcode:             Not affected
+# Vulnerability Reg file data sampling:    Not affected
+# Vulnerability Retbleed:                  Not affected
+# Vulnerability Spec rstack overflow:      Vulnerable: Safe RET, no microcode
+# Vulnerability Spec store bypass:         Vulnerable
+# Vulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization
+# Vulnerability Spectre v2:                Mitigation; Retpolines; STIBP disabled; RSB filling; PBRSB-eIBRS Not affected; BHI Not affected
+# Vulnerability Srbds:                     Not affected
+# Vulnerability Tsa:                       Vulnerable: No microcode
+# Vulnerability Tsx async abort:           Not affected
+# Vulnerability Vmscape:                   Not affected
+#                total        used        free      shared  buff/cache   available
+# Mem:            15Gi       1.3Gi        13Gi        43Mi       1.5Gi        14Gi
+# Swap:          3.0Gi          0B       3.0Gi
+# Filesystem     Type  Size  Used Avail Use% Mounted on
+# /dev/root      ext4  145G   60G   86G  41% /
+# NAME          SIZE ROTA MODEL
+# nvme0n1       150G    0 MSFT NVMe Accelerator v1.0
+# ├─nvme0n1p1   149G    0 
+# ├─nvme0n1p14    4M    0 
+# ├─nvme0n1p15  106M    0 
+# └─nvme0n1p16  913M    0 
+# Linux runnervm7aw5e 7.0.0-1017-azure #17~24.04.1-Ubuntu SMP PREEMPT Thu Sep 24 18:46:57 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+# ---- einfile-bench-full.txt ----
+# einfile-bench full engines=["einfile", "einfile4", "redb", "lmdb", "sqlite", "signed"] N=100000 VS=256 reps=5 arch=x86_64
+# machine cpu=AMD EPYC 9V74 80-Core Processor threads=4 arch=x86_64
+# machine ram=16367528 kB
+# machine kernel=7.0.0-1017-azure
+# machine storage dir=/home/runner/work/_temp/einfile-bench-data device=/dev/root fs=ext4
+# machine rustc=rustc 1.96.1 (31fca3adb 2026-06-26)
+# machine commit=22f8fa2ff80ff4ec75b6287b694adc4a82461319 features=competitors,mldsa
+# versions redb=4.4.0 heed=0.22.1 rusqlite=0.32.1 libsqlite3-sys=0.30.1 lmdb-master-sys=0.2.6
+RES|load|einfile|med=189.099|p95=240.437|max=240.437|mean=202.849|min=177.585|reps=5|ms|N=100000 VS=256; sorted input, one txn, synced; includes open; file bytes=30308320
+RES|size|einfile|value=303.083|bytes/rec|N=100000 VS=256; the whole store directory after load; 27100000 key+value bytes in all
+RES|size_alloc|einfile|value=303.104|bytes/rec|N=100000 VS=256; the whole store directory after load; 27100000 key+value bytes in all
+RES|open|einfile|med=5139.599|p95=5398.769|max=5398.769|mean=5186.155|min=5109.123|reps=5|us|N=100000 VS=256; warm page cache; einfile's open = recover (the last commit's anchor) + lazy open, no crc; its verify = the full crc
+RES|verify|einfile|med=20.016|p95=20.044|max=20.044|mean=20.022|min=20.010|reps=5|ms|N=100000 VS=256; the engine's full integrity check
+RES|get_hot|einfile|med=787.516|p95=839.800|max=839.800|mean=793.526|min=742.523|reps=5|ns/get|N=100000 VS=256; 100000 random gets in ONE read txn; acc=38383141
+RES|prefix|einfile|med=4.727|p95=4.767|max=4.767|mean=4.726|min=4.689|reps=5|us/scan|N=100000 VS=256; 1000 13-byte prefixes (<=100 keys each) in ONE read txn; acc=30850000
+RES|get_cold|einfile|med=55.692|p95=76.203|max=76.203|mean=58.329|min=51.702|reps=5|ms|N=100000 VS=256; fadvise(DONTNEED) then open + 1000 gets; fadvise_ok=true; acc=383858
+RES|put|einfile|med=2662.260|p95=2760.208|max=2760.208|mean=2674.468|min=2597.050|reps=5|us/put|N=100000 VS=256; 10000 overwrites, 32 per commit, UNSYNCED; deltas=157 compactions=156
+RES|put_commit|einfile|med=27.190|p95=170.687|max=322.432|mean=85.445|min=1.911|reps=1565|ms/commit|N=100000 VS=256; the put row's 313 commits each; max = the longest pause; deltas=157 compactions=156
+RES|compact|einfile|med=164.397|p95=168.197|max=168.197|mean=163.210|min=156.930|reps=5|ms|N=100000 VS=256; after the put row; whole-image rewrite (tmp+fsync+rename+dir fsync); bytes 30313524 -> 30308324
+RES|put_durable|einfile|med=0.325|p95=8.459|max=245.649|mean=6.547|min=0.270|reps=500|ms/commit|N=100000 VS=256; 1 put per commit, synced (proot: fsync is not representative); deltas=97 compactions=3
+RES|put_normal|einfile|med=0.325|p95=8.204|max=202.091|mean=6.447|min=0.270|reps=500|ms/commit|N=100000 VS=256; 1 put per commit, NORMAL: torn-safe, synced at a checkpoint (every 64th commit); deltas=97 compactions=3
+RES|delete|einfile|med=2209.262|p95=2242.242|max=2242.242|mean=2214.925|min=2198.264|reps=5|us/delete|N=100000 VS=256; 10000 deletes, 32 per commit, UNSYNCED; deltas=157 compactions=156
+RES|load|einfile4|med=181.267|p95=200.583|max=200.583|mean=177.946|min=159.393|reps=5|ms|N=100000 VS=256; sorted input, one txn, synced; includes open; file bytes=31285868
+RES|size|einfile4|value=312.859|bytes/rec|N=100000 VS=256; the whole store directory after load; 27100000 key+value bytes in all
+RES|size_alloc|einfile4|value=312.934|bytes/rec|N=100000 VS=256; the whole store directory after load; 27100000 key+value bytes in all
+RES|open|einfile4|med=12937.355|p95=24762.800|max=24762.800|mean=15135.407|min=12294.419|reps=5|us|N=100000 VS=256; warm page cache; einfile's open = recover (the last commit's anchor) + lazy open, no crc; its verify = the full crc
+RES|verify|einfile4|med=20.544|p95=20.567|max=20.567|mean=20.525|min=20.457|reps=5|ms|N=100000 VS=256; the engine's full integrity check
+RES|get_hot|einfile4|med=531.154|p95=541.016|max=541.016|mean=533.295|min=522.850|reps=5|ns/get|N=100000 VS=256; 100000 random gets in ONE read txn; acc=38383141
+RES|prefix|einfile4|med=6.746|p95=6.923|max=6.923|mean=6.780|min=6.681|reps=5|us/scan|N=100000 VS=256; 1000 13-byte prefixes (<=100 keys each) in ONE read txn; acc=30850000
+RES|get_cold|einfile4|med=60.422|p95=79.018|max=79.018|mean=64.441|min=58.793|reps=5|ms|N=100000 VS=256; fadvise(DONTNEED) then open + 1000 gets; fadvise_ok=true; acc=383858
+RES|put|einfile4|med=11.948|p95=12.101|max=12.101|mean=11.472|min=9.351|reps=5|us/put|N=100000 VS=256; 10000 overwrites, 32 per commit, UNSYNCED; commits=313 compactions=0
+RES|put_commit|einfile4|med=0.221|p95=0.237|max=51.490|mean=0.366|min=0.129|reps=1565|ms/commit|N=100000 VS=256; the put row's 313 commits each; max = the longest pause; commits=313 compactions=0
+RES|compact|einfile4|med=207.706|p95=216.370|max=216.370|mean=207.737|min=199.720|reps=5|ms|N=100000 VS=256; after the put row; v4 copy compaction into <file>.compact, rename; bytes 53926364 -> 31285868
+RES|put_durable|einfile4|med=0.330|p95=0.426|max=58.327|mean=0.870|min=0.257|reps=500|ms/commit|N=100000 VS=256; 1 put per commit, synced (proot: fsync is not representative); commits=100 compactions=0
+RES|put_normal|einfile4|med=0.013|p95=0.018|max=51.506|mean=0.530|min=0.008|reps=500|ms/commit|N=100000 VS=256; 1 put per commit, NORMAL: torn-safe, synced at a checkpoint (every 64th commit); commits=100 compactions=0
+RES|delete|einfile4|med=12.305|p95=12.353|max=12.353|mean=12.305|min=12.242|reps=5|us/delete|N=100000 VS=256; 10000 deletes, 32 per commit, UNSYNCED; commits=313 compactions=0
+RES|load|redb|med=195.041|p95=207.460|max=207.460|mean=196.899|min=193.011|reps=5|ms|N=100000 VS=256; sorted input, one txn, synced; includes open; file bytes=33689600
+RES|size|redb|value=336.896|bytes/rec|N=100000 VS=256; the whole store directory after load; 27100000 key+value bytes in all
+RES|size_alloc|redb|value=299.213|bytes/rec|N=100000 VS=256; the whole store directory after load; 27100000 key+value bytes in all
+RES|open|redb|med=152.319|p95=166.890|max=166.890|mean=152.115|min=142.043|reps=5|us|N=100000 VS=256; warm page cache; einfile's open = recover (the last commit's anchor) + lazy open, no crc; its verify = the full crc
+RES|verify|redb|med=13.487|p95=13.719|max=13.719|mean=13.527|min=13.427|reps=5|ms|N=100000 VS=256; the engine's full integrity check
+RES|get_hot|redb|med=526.002|p95=562.118|max=562.118|mean=529.805|min=514.359|reps=5|ns/get|N=100000 VS=256; 100000 random gets in ONE read txn; acc=38383141
+RES|prefix|redb|med=7.930|p95=7.997|max=7.997|mean=7.922|min=7.865|reps=5|us/scan|N=100000 VS=256; 1000 13-byte prefixes (<=100 keys each) in ONE read txn; acc=30850000
+RES|get_cold|redb|med=130.309|p95=181.613|max=181.613|mean=139.118|min=126.282|reps=5|ms|N=100000 VS=256; fadvise(DONTNEED) then open + 1000 gets; fadvise_ok=true; acc=383858
+RES|put|redb|med=5.494|p95=5.520|max=5.520|mean=5.468|min=5.366|reps=5|us/put|N=100000 VS=256; 10000 overwrites, 32 per commit, UNSYNCED; 
+RES|put_commit|redb|med=0.171|p95=0.211|max=0.476|mean=0.174|min=0.088|reps=1565|ms/commit|N=100000 VS=256; the put row's 313 commits each; max = the longest pause; 
+RES|compact|redb|med=248.456|p95=256.771|max=256.771|mean=246.038|min=233.800|reps=5|ms|N=100000 VS=256; after the put row; Database::compact() = true; bytes 67375104 -> 29884416
+RES|put_durable|redb|med=0.146|p95=0.332|max=5.799|mean=0.280|min=0.131|reps=500|ms/commit|N=100000 VS=256; 1 put per commit, synced (proot: fsync is not representative); 
+RES|put_normal|redb|med=0.014|p95=0.023|max=5.647|mean=0.058|min=0.011|reps=500|ms/commit|N=100000 VS=256; 1 put per commit, NORMAL: torn-safe, synced at a checkpoint (every 64th commit); 
+RES|delete|redb|med=6.620|p95=6.633|max=6.633|mean=6.609|min=6.570|reps=5|us/delete|N=100000 VS=256; 10000 deletes, 32 per commit, UNSYNCED; 
+RES|load|lmdb(heed)|med=137.663|p95=162.707|max=162.707|mean=143.071|min=137.507|reps=5|ms|N=100000 VS=256; sorted input, one txn, synced; includes open; file bytes=31739904
+RES|size|lmdb(heed)|value=317.399|bytes/rec|N=100000 VS=256; the whole store directory after load; 27100000 key+value bytes in all
+RES|size_alloc|lmdb(heed)|value=317.358|bytes/rec|N=100000 VS=256; the whole store directory after load; 27100000 key+value bytes in all
+RES|open|lmdb(heed)|med=60.100|p95=110.145|max=110.145|mean=70.944|min=59.018|reps=5|us|N=100000 VS=256; warm page cache; einfile's open = recover (the last commit's anchor) + lazy open, no crc; its verify = the full crc
+RES|verify|lmdb(heed)|value=0.000|-|the engine offers no integrity check
+RES|get_hot|lmdb(heed)|med=437.696|p95=441.542|max=441.542|mean=432.326|min=415.039|reps=5|ns/get|N=100000 VS=256; 100000 random gets in ONE read txn; acc=38383141
+RES|prefix|lmdb(heed)|med=3.587|p95=4.407|max=4.407|mean=3.605|min=2.879|reps=5|us/scan|N=100000 VS=256; 1000 13-byte prefixes (<=100 keys each) in ONE read txn; acc=30850000
+RES|get_cold|lmdb(heed)|med=83.812|p95=101.609|max=101.609|mean=89.064|min=80.691|reps=5|ms|N=100000 VS=256; fadvise(DONTNEED) then open + 1000 gets; fadvise_ok=true; acc=383858
+RES|put|lmdb(heed)|med=4.493|p95=4.580|max=4.580|mean=4.510|min=4.457|reps=5|us/put|N=100000 VS=256; 10000 overwrites, 32 per commit, UNSYNCED; 
+RES|put_commit|lmdb(heed)|med=0.138|p95=0.185|max=0.405|mean=0.144|min=0.077|reps=1565|ms/commit|N=100000 VS=256; the put row's 313 commits each; max = the longest pause; 
+RES|compact|lmdb(heed)|med=96.727|p95=100.839|max=100.839|mean=98.305|min=96.518|reps=5|ms|N=100000 VS=256; after the put row; copy_to_path(Compact) + close + rename over data.mdb + reopen; bytes 32256000 -> 31739904
+RES|put_durable|lmdb(heed)|med=0.161|p95=0.309|max=8.921|mean=0.209|min=0.140|reps=500|ms/commit|N=100000 VS=256; 1 put per commit, synced (proot: fsync is not representative); 
+RES|put_normal|lmdb(heed)|med=0.015|p95=0.024|max=0.046|mean=0.016|min=0.009|reps=500|ms/commit|N=100000 VS=256; 1 put per commit, NORMAL: torn-safe, synced at a checkpoint (every 64th commit); 
+RES|delete|lmdb(heed)|med=4.347|p95=4.500|max=4.500|mean=4.390|min=4.281|reps=5|us/delete|N=100000 VS=256; 10000 deletes, 32 per commit, UNSYNCED; 
+RES|load|sqlite|med=398.425|p95=412.701|max=412.701|mean=394.248|min=378.826|reps=5|ms|N=100000 VS=256; sorted input, one txn, synced; includes open; file bytes=31518720
+RES|size|sqlite|value=315.187|bytes/rec|N=100000 VS=256; the whole store directory after load; 27100000 key+value bytes in all
+RES|size_alloc|sqlite|value=315.187|bytes/rec|N=100000 VS=256; the whole store directory after load; 27100000 key+value bytes in all
+RES|open|sqlite|med=168.724|p95=187.331|max=187.331|mean=157.458|min=95.534|reps=5|us|N=100000 VS=256; warm page cache; einfile's open = recover (the last commit's anchor) + lazy open, no crc; its verify = the full crc
+RES|verify|sqlite|med=23.336|p95=23.893|max=23.893|mean=23.364|min=22.997|reps=5|ms|N=100000 VS=256; the engine's full integrity check
+RES|get_hot|sqlite|med=2564.316|p95=2590.808|max=2590.808|mean=2571.911|min=2562.127|reps=5|ns/get|N=100000 VS=256; 100000 random gets in ONE read txn; acc=38383141
+RES|prefix|sqlite|med=22.148|p95=22.279|max=22.279|mean=22.057|min=21.675|reps=5|us/scan|N=100000 VS=256; 1000 13-byte prefixes (<=100 keys each) in ONE read txn; acc=30850000
+RES|get_cold|sqlite|med=169.403|p95=190.869|max=190.869|mean=176.100|min=167.658|reps=5|ms|N=100000 VS=256; fadvise(DONTNEED) then open + 1000 gets; fadvise_ok=true; acc=383858
+RES|put|sqlite|med=8.159|p95=8.350|max=8.350|mean=8.171|min=8.032|reps=5|us/put|N=100000 VS=256; 10000 overwrites, 32 per commit, UNSYNCED; 
+RES|put_commit|sqlite|med=0.183|p95=0.273|max=3.059|mean=0.261|min=0.089|reps=1565|ms/commit|N=100000 VS=256; the put row's 313 commits each; max = the longest pause; 
+RES|compact|sqlite|med=134.564|p95=136.724|max=136.724|mean=134.619|min=132.629|reps=5|ms|N=100000 VS=256; after the put row; VACUUM + wal_checkpoint(TRUNCATE); bytes 35737632 -> 29270016
+RES|put_durable|sqlite|med=0.210|p95=0.330|max=5.330|mean=0.239|min=0.179|reps=500|ms/commit|N=100000 VS=256; 1 put per commit, synced (proot: fsync is not representative); 
+RES|put_normal|sqlite|med=0.010|p95=0.013|max=0.402|mean=0.014|min=0.006|reps=500|ms/commit|N=100000 VS=256; 1 put per commit, NORMAL: torn-safe, synced at a checkpoint (every 64th commit); 
+RES|delete|sqlite|med=8.627|p95=8.790|max=8.790|mean=8.608|min=8.339|reps=5|us/delete|N=100000 VS=256; 10000 deletes, 32 per commit, UNSYNCED; 
+RES|load_signed|signed|med=1979.607|p95=1982.802|max=1982.802|mean=1980.360|min=1979.456|reps=5|ms|N=100000 VS=256 seal every 32 records; keygen + 3125 real seals, in memory
+RES|size|signed|value=610.105|bytes/rec|N=100000 VS=256 seal every 32 records; the working file: 61010496 bytes
+RES|verify_signed|signed|med=820.685|p95=824.230|max=824.230|mean=821.417|min=819.892|reps=5|ms|N=100000 VS=256 seal every 32 records; file read + verify_doc; records=100000 seals=3125, every seal ML-DSA-65 verified; warm page cache
+RES|verify_signed_rate|signed|med=121849.492|p95=121967.342|max=121967.342|mean=121741.330|min=121325.415|reps=5|records/s|N=100000 VS=256 seal every 32 records; the verify_signed row over 100000 records; 32 records per seal, so the rate moves with that
+RES|verify_counted|signed|med=328.631|p95=332.704|max=332.704|mean=329.332|min=327.973|reps=5|ms|N=100000 VS=256 seal every 32 records; the same walk with no signature code behind the seam: every record and seal walked, none proved, `seals_bad` then only counts them
+RES|seal_commit|signed|med=0.491|p95=1.495|max=2.768|mean=0.632|min=0.212|reps=100|ms/commit|N=100000 VS=256 seal every 32 records; one record, one real seal, into a file of N records; IN MEMORY, the device write is not in this row
+RES|seal_bytes|signed|value=4144.000|bytes/commit|N=100000 VS=256 seal every 32 records; what one such commit adds to the file, its 256 byte record body included
+RES|sign_one|signed|med=0.474|p95=1.479|max=2.128|mean=0.595|min=0.202|reps=100|ms|100 messages; through the seam, this provider's cost and no file's
+RES|verify_one|signed|med=0.156|p95=0.164|max=0.167|mean=0.158|min=0.156|reps=100|ms|100 messages; through the seam, this provider's cost and no file's
+RES|merge|signed|med=1780.648|p95=1814.896|max=1814.896|mean=1786.999|min=1777.678|reps=5|ms|N=100000 VS=256 seal every 32 records; two devices, 100000 records in all, 3126 seals; both sides and the union verified, a fresh file built, one MERGE sealed; in memory
+RES|merge_bytes|signed|value=60395384.000|bytes|N=100000 VS=256 seal every 32 records; the merged file with its MERGE record
+RES|archive|signed|value=60617320.000|bytes|N=100000 VS=256 seal every 32 records; reader 136484 bytes, format text 95127 bytes; the working file is 61010496 bytes, its copy with no reader 60385576
+RES|archive_added|signed|value=231744.000|bytes|N=100000 VS=256 seal every 32 records; reader 136484 bytes, format text 95127 bytes; archive minus the copy; FORMAT §9.5 says 231744
+RES|size_compact|signed|value=603.856|bytes/rec|N=100000 VS=256 seal every 32 records; the copy `Doc::copy_bytes` writes, dropping every superseded root
+CHECK|checksums|17 rows compared across engines|EQUAL

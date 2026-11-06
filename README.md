@@ -26,6 +26,8 @@ Designed for erasure: a record can be removed from a signed history without brea
 
 ---
 
+[![einstore on crates.io](https://img.shields.io/crates/v/einstore.svg)](https://crates.io/crates/einstore) [![docs.rs](https://img.shields.io/docsrs/einstore)](https://docs.rs/einstore) [![CI](https://github.com/SyniakSviatoslav/Einfile/actions/workflows/ci.yml/badge.svg)](https://github.com/SyniakSviatoslav/Einfile/actions/workflows/ci.yml)
+
 **Status: pre-1.0; the crates are at 0.1.0 on [crates.io](https://crates.io/crates/einstore).** The format is normative for the bytes written today and is not frozen: a layout no production image holds may still change before 1.0, and the 1.0 release fixes the text. No external audit is on record. Read [When not to use it](#when-not-to-use-it) and [Limits](#limits) before you rely on any of this.
 
 ## What it is
@@ -277,18 +279,18 @@ The archive row's formula is in FORMAT §9.5.
 
 ## Crates
 
-| Crate | What | `no_std` |
-|---|---|---|
-| `einstore` | the facade: `Db`, transactions, and everything below | no |
-| `einfile-crc` | zlib CRC-32, the one place hardware CRC needs `unsafe` | yes |
-| `einfile-image` | the container: cells, superblocks, PartTab, objects, crc | yes |
-| `einfile-kv` | the KV layout, v1 to v4, and its zero-copy reader | yes |
-| `einfile-log` | the chained event log and the signed DOC root over it | yes |
-| `einfile-io` | `Db`, transactions, devices, recovery, crash harness | no |
-| `einfile-ffi` | the C ABI, and Python through it | no |
-| `einfile-reader` | the reader compiled to wasm32, no imports | no |
-| `einfile-sig-mldsa` | ML-DSA-65 behind `Signer` and `Verifier`, over `fips204` | yes |
-| `einfile-sync` | one sync session over tails, bytes in and bytes out; no transport | yes |
+| Crate | What | `no_std` | crates.io |
+|---|---|---|---|
+| [`einstore`](https://crates.io/crates/einstore) | the facade: `Db`, transactions, and everything below | no | [![einstore](https://img.shields.io/crates/v/einstore.svg)](https://crates.io/crates/einstore) [docs](https://docs.rs/einstore) |
+| [`einfile-crc`](https://crates.io/crates/einfile-crc) | zlib CRC-32, the one place hardware CRC needs `unsafe` | yes | [![einfile-crc](https://img.shields.io/crates/v/einfile-crc.svg)](https://crates.io/crates/einfile-crc) [docs](https://docs.rs/einfile-crc) |
+| [`einfile-image`](https://crates.io/crates/einfile-image) | the container: cells, superblocks, PartTab, objects, crc | yes | [![einfile-image](https://img.shields.io/crates/v/einfile-image.svg)](https://crates.io/crates/einfile-image) [docs](https://docs.rs/einfile-image) |
+| [`einfile-kv`](https://crates.io/crates/einfile-kv) | the KV layout, v1 to v4, and its zero-copy reader | yes | [![einfile-kv](https://img.shields.io/crates/v/einfile-kv.svg)](https://crates.io/crates/einfile-kv) [docs](https://docs.rs/einfile-kv) |
+| [`einfile-log`](https://crates.io/crates/einfile-log) | the chained event log and the signed DOC root over it | yes | [![einfile-log](https://img.shields.io/crates/v/einfile-log.svg)](https://crates.io/crates/einfile-log) [docs](https://docs.rs/einfile-log) |
+| [`einfile-io`](https://crates.io/crates/einfile-io) | `Db`, transactions, devices, recovery, crash harness | no | [![einfile-io](https://img.shields.io/crates/v/einfile-io.svg)](https://crates.io/crates/einfile-io) [docs](https://docs.rs/einfile-io) |
+| `einfile-ffi` | the C ABI, and Python through it | no | not published: build from this repo |
+| `einfile-reader` | the reader compiled to wasm32, no imports | no | not published: build from this repo |
+| [`einfile-sig-mldsa`](https://crates.io/crates/einfile-sig-mldsa) | ML-DSA-65 behind `Signer` and `Verifier`, over `fips204` | yes | [![einfile-sig-mldsa](https://img.shields.io/crates/v/einfile-sig-mldsa.svg)](https://crates.io/crates/einfile-sig-mldsa) [docs](https://docs.rs/einfile-sig-mldsa) |
+| [`einfile-sync`](https://crates.io/crates/einfile-sync) | one sync session over tails, bytes in and bytes out; no transport | yes | [![einfile-sync](https://img.shields.io/crates/v/einfile-sync.svg)](https://crates.io/crates/einfile-sync) [docs](https://docs.rs/einfile-sync) |
 
 ## Format
 

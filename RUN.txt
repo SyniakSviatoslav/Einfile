@@ -1,0 +1,3 @@
+commit 22f8fa2ff80ff4ec75b6287b694adc4a82461319
+run https://github.com/SyniakSviatoslav/Einfile/actions/runs/42212439407
+N=100000 VS=256 REPS=5

@@ -4,13 +4,18 @@ name = "einfile-sync"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-publish = false
-repository = "https://github.com/SyniakSviatoslav/einfile"
+repository = "https://github.com/SyniakSviatoslav/Einfile"
 readme = "README.md"
 description = "One sync session between two copies of a signed file: bytes in, bytes out. No I/O, no clock, no transport, no external crate. no_std + alloc."
 
 # Keep [dependencies] to these two (einfile-crc comes with einfile-image). A transport, a runtime, a
 # hash or a signature here is a defect: they arrive through the seams of `einfile-log::doc`.
+homepage = "https://github.com/SyniakSviatoslav/Einfile"
+documentation = "https://docs.rs/einfile-sync"
+rust-version = "1.96"
+keywords = ["sync", "merge", "replication", "offline-first", "no-std"]
+categories = ["database-implementations", "no-std"]
+
 [dependencies]
 einfile-image = { path = "../einfile-image", version = "0.1.0" }
 einfile-log = { path = "../einfile-log", version = "0.1.0", features = ["sync"] }

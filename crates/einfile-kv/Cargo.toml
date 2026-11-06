@@ -4,10 +4,14 @@ name = "einfile-kv"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-publish = false
-repository = "https://github.com/SyniakSviatoslav/einfile"
+repository = "https://github.com/SyniakSviatoslav/Einfile"
 readme = "README.md"
 description = "The einfile KV layout over an einfile image: v1/v2 compacted roots, the v3 delta chain, the zero-copy reader KvIn, crc-checked load. no_std + alloc; depends only on einfile-image."
+homepage = "https://github.com/SyniakSviatoslav/Einfile"
+documentation = "https://docs.rs/einfile-kv"
+rust-version = "1.96"
+keywords = ["key-value", "btree", "zero-copy", "storage", "no-std"]
+categories = ["database-implementations", "data-structures", "no-std"]
 
 [features]
 default = []

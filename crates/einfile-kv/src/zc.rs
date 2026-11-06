@@ -156,7 +156,7 @@ impl<C: Image> KvIn<C> {
     /// W-AUDIT S2's quadratic guard), and the key order. `Err` = what `decode` refuses.
     fn index_pass(&self) -> Result<bool, KvError> {
         let mut budget = self.kbytes.checked_add(self.vbytes).ok_or(KvError::NotKv)?;
-        let mut sorted = true;
+        let sorted = true;
         for i in 0..self.n {
             let (_, kl) = self.key_slice(i)?;
             let (_, vl) = self.val_slice(i)?;

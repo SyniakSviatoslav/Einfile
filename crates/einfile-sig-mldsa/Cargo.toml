@@ -4,8 +4,7 @@ name = "einfile-sig-mldsa"
 version = "0.1.0"
 edition = "2021"
 license = "MIT OR Apache-2.0"
-publish = false
-repository = "https://github.com/SyniakSviatoslav/einfile"
+repository = "https://github.com/SyniakSviatoslav/Einfile"
 description = "ML-DSA-65 behind einfile-log's Signer and Verifier: external pure FIPS 204 with the empty context, the signature a sealed einfile image carries."
 
 # DECART (W-MG-SIG, 2026-11-01; the comparison is docs/research/R-MLDSA-PROVENANCE.md §3 and §5).
@@ -27,6 +26,13 @@ description = "ML-DSA-65 behind einfile-log's Signer and Verifier: external pure
 #   goes red, or a differential test does, swap `fips204` for `ml-dsa` here, nothing else moves.
 # VERIFY: `cargo tree -e no-dev` shows einfile-log, einfile-image, einfile-crc, fips204, sha2 and their
 #   own, with no getrandom and no dowiz-core.
+readme = "README.md"
+homepage = "https://github.com/SyniakSviatoslav/Einfile"
+documentation = "https://docs.rs/einfile-sig-mldsa"
+rust-version = "1.96"
+keywords = ["ml-dsa", "fips-204", "signature", "einfile", "wasm"]
+categories = ["cryptography", "wasm", "no-std"]
+
 [dependencies]
 einfile-log = { path = "../einfile-log", version = "0.1.0" }
 # default-rng off: this crate draws no randomness (`rnd = 0^32`) and getrandom needs a wasm shim.

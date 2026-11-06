@@ -196,6 +196,22 @@ what is still open for a third-party implementer, and §14 what one file cannot 
 Changes are in [`CHANGELOG.md`](../../CHANGELOG.md), which also states the versioning
 rule.
 
+## Performance
+
+One run on a shared GitHub-hosted runner (AMD EPYC 9V74, 4 threads, N = 100 000, 256-byte values,
+medians of 5). The full table, the command and the raw output are in the
+[repository README](https://github.com/SyniakSviatoslav/Einfile#benchmarks).
+
+| | einstore (KV v4) | LMDB | redb | SQLite |
+|---|---|---|---|---|
+| get, ns | 531 | 438 | 526 | 2 564 |
+| cold open + 1000 gets, ms | 60.4 | 83.8 | 130 | 169 |
+| open, us | 12 937 | 60 | 152 | 169 |
+| put, unsynced, us | 11.9 | 4.49 | 5.49 | 8.16 |
+| durable commit, ms | 0.330 | 0.161 | 0.146 | 0.210 |
+
+It is not the fastest store: `open` and writes are where it loses.
+
 ## Licence
 
 MIT OR Apache-2.0, at your option. See [`LICENSE-MIT`](LICENSE-MIT) and [`LICENSE-APACHE`](LICENSE-APACHE).
